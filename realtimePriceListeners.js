@@ -6,12 +6,12 @@ import BN from 'bn.js';
 const OPENBOOK_PROGRAM_ID = new PublicKey('srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX');
 const RAYDIUM_POOL_V4_PROGRAM_ID = new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
 const mintDataCache = new Map();
-const HELIUS_RPC_URL = "";
-const HELIUS_WSS_RPC_URL = "";
 const keepaliveAgent = new https.Agent({
     timeout: 10000,
     maxSockets: 2048,
 });
+const HELIUS_RPC_URL = "";
+const HELIUS_WSS_RPC_URL = "";
 export const connection = new Connection(HELIUS_RPC_URL, {
     disableRetryOnRateLimit: false,
     httpAgent: keepaliveAgent,
@@ -244,9 +244,6 @@ const closeListeners = (quoteListener, tokenListener, taListener) => {
 async function startListeners(poolKeys, pubkey) {
     const tokenAddr = [poolKeys.baseMint, poolKeys.quoteMint].map(e => e.toString()).find(str => /pump$/.test(str));
     const curr = mintDataCache.get(tokenAddr);
-    if ("priceCache" in curr) {
-        return;
-    }
     const quoteListener = connection.onAccountChange(poolKeys.quoteVault, (accountInfo) => {
         processAccountDataQuote(accountInfo, poolKeys);
         logPriceAndValue(tokenAddr);
@@ -254,12 +251,18 @@ async function startListeners(poolKeys, pubkey) {
     const baseListener = connection.onAccountChange(poolKeys.baseVault, (accountInfo) => {
         processAccountDataBase(accountInfo, poolKeys);
     }, "processed");
-    const taListener = connection.onAccountChange(getAssociatedTokenAddressSync(new PublicKey(tokenAddr), pubkey), (accountInfo) => {
+    const taListener = connection.onAccountChange(getAssociatedTokenAddressSync(new PublicKey(tokenAddr), new PublicKey(pubkey)), (accountInfo) => {
         processTokenAccountChange(accountInfo, tokenAddr);
         console.log();
     }, "processed");
+    const taData = await connection.getAccountInfo(getAssociatedTokenAddressSync(new PublicKey(tokenAddr), new PublicKey(pubkey)));
+    let ta;
+    if (taData) {
+        ta = SPL_ACCOUNT_LAYOUT.decode(taData.data);
+    }
     curr.priceCache = {
         closeAccountListeners: closeListeners(quoteListener, baseListener, taListener),
+        tokenAccount: ta
     };
     mintDataCache.set(poolKeys.quoteMint.toString(), curr);
 }

@@ -1,0 +1,15 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend    # Build context for frontend service
+      dockerfile: Dockerfile  # Dockerfile for frontend service
+    ports:
+      - "3000:3000"          # Expose frontend service on port 3000
+
+  backend:
+    build:
+      context: ./backend     # Build context for backend service
+      dockerfile: Dockerfile  # Dockerfile for backend service
+    ports:
+      - "3001:3001"          # Expose backend service on port 3001

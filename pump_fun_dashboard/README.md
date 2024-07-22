@@ -1,0 +1,1 @@
+Before running, you will need a RPC url to fill into backend/tokenUtils.js as well as a birdeye.so API key to fill in under X-API-KEY.

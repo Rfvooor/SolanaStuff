@@ -1,0 +1,19 @@
+/* frontend/src/styles.css */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.MuiFormControl-root {
+  margin: 20px;
+}
+
+.MuiTableCell-head {
+  cursor: pointer;
+}

@@ -282,22 +282,25 @@ async function startListeners(poolKeys, pubkey?) {
       processAccountDataBase(accountInfo, poolKeys)
     }, "processed"
   )
-  const taListener = connection.onAccountChange(
-    getAssociatedTokenAddressSync(new PublicKey(tokenAddr), new PublicKey(pubkey)), (accountInfo) => {
-      processTokenAccountChange(accountInfo, tokenAddr)
-      console.log()
-      }, "processed"
-  )
-  const taData = await connection.getAccountInfo(getAssociatedTokenAddressSync(new PublicKey(tokenAddr), new PublicKey(pubkey)))
+  let taListener = -1;
   let ta;
-  if(taData) {
-    ta = SPL_ACCOUNT_LAYOUT.decode(taData.data)
+  if(pubkey) {
+    taListener = connection.onAccountChange(
+      getAssociatedTokenAddressSync(new PublicKey(tokenAddr), new PublicKey(pubkey)), (accountInfo) => {
+        processTokenAccountChange(accountInfo, tokenAddr)
+        console.log()
+        }, "processed"
+    )
+    const taData = await connection.getAccountInfo(getAssociatedTokenAddressSync(new PublicKey(tokenAddr), new PublicKey(pubkey)))
+    if(taData) {
+      ta = SPL_ACCOUNT_LAYOUT.decode(taData.data)
+    }
   }
   curr.priceCache = {
     closeAccountListeners: closeListeners(quoteListener, baseListener, taListener),
     tokenAccount: ta
   }
-  mintDataCache.set(poolKeys.quoteMint.toString(), curr!)
+  mintDataCache.set(tokenAddr, curr!)
 }
 
 function parseBalFromTaData(taData, poolKeys) {
